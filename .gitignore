@@ -1,3 +1,5 @@
 !*.[ch]
 !makefile
 !*.sh
+*.sublime-workspace
+*.o

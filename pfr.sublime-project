@@ -3,15 +3,18 @@
 	[
 		{
 			"follow_symlinks": true,
-			"path": "./"
+			"path": "sources_c"
 		},
 		{
 			"follow_symlinks": true,
-			"path": "../ARBORESCENCE"
-		},
-		{
-			"follow_symlinks": true,
-			"path": "/home/pauka/.indexation"
+			"path": "~/.indexation"
 		}
+	],
+	"build_systems":
+	[
+		{
+			"name": "Make"
+		}
+
 	]
 }
