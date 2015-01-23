@@ -5,6 +5,10 @@
 			"follow_symlinks": true,
 			"path": "sources_c"
 		},
+        {
+            "follow_symlinks": true,
+            "path": "~/ARBORESCENCE"
+        },
 		{
 			"follow_symlinks": true,
 			"path": "~/.indexation"

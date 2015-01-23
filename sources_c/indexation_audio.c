@@ -28,7 +28,7 @@ int indexer_audio() {
     get_config_audio(&nbEchantillon, &nbIntervalle);
 
     Repertoire r;
-    if (init_repertoire(&r, "*.bin", "rb") == 0) {
+    if (init_repertoire(&r, "*.wav", "rb") == 0) {
         fprintf(stderr, "[indexation_audio] erreur init_repertoire");
         return 0;
     }
@@ -48,6 +48,7 @@ int indexer_audio() {
             id = prochain_id_lbd(lbd);
             cheminDescripteur = get_descripteur_audio(id);
             indexer_fichier_audio(f, nbEchantillon, nbIntervalle,id, cheminDescripteur);
+            
             nbFichierIndexe++;
             ajouter_lbd(&lbd, f.nom);
             free(cheminDescripteur);

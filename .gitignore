@@ -2,3 +2,4 @@
 !makefile
 !*.sh
 *.sublime-workspace
+*.o
