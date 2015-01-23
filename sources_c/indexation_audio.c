@@ -50,7 +50,7 @@ int indexer_audio() {
             indexer_fichier_audio(f, nbEchantillon, nbIntervalle,id, cheminDescripteur);
             
             nbFichierIndexe++;
-            // ajouter_lbd(&lbd, f.nom);
+            ajouter_lbd(&lbd, f.nom);
             free(cheminDescripteur);
         }
     }
