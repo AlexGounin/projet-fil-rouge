@@ -86,6 +86,55 @@ void afficherEnteteWav(Fichier f, int* bitsPerSample, unsigned int* nbOctet) {
     afficherNbOctet(f, "\tDataSize :", 4, nbOctet);
 }
 
+
+void creerFenetresChar(FILE* ficDescripteur, int nbEchantillon, int nbIntervalle, int* histogramme, FILE* descr) {
+    char* fenetre = malloc(nbEchantillon);
+    short valeur = 0;
+    double tailleIntervalle = ((double) 256) / ((double) nbIntervalle);
+    int indice;
+    while (fread(fenetre, 2, nbEchantillon, descr)) {
+        /* construction de l'histogramme par parcours simple de la fenêtre */
+        for (int i = 0; i < nbEchantillon; i += 1) {
+            memcpy(&valeur, &fenetre[i], 1);
+            // printf("  %d\n", valeur);
+            indice = (int) ((valeur + 128) / tailleIntervalle);
+            histogramme[indice]++;
+        }
+        ecrireFenetre(ficDescripteur, histogramme, nbIntervalle);
+        for (int i = 0; i < nbIntervalle; ++i) {
+            histogramme[i] = 0;
+        }
+    }
+}
+
+void creerFenetresShort(FILE* ficDescripteur, int nbEchantillon, int nbIntervalle, int* histogramme, FILE* descr) {
+    char* fenetre = malloc(2 * nbEchantillon);
+    short valeur = 0;
+    double tailleIntervalle = ((double) 65536) / ((double) nbIntervalle);
+    int indice;
+    while (fread(fenetre, 2, nbEchantillon, descr)) {
+        /* construction de l'histogramme par parcours simple de la fenêtre */
+        for (int i = 0; i < nbEchantillon; i += 2) {
+            memcpy(&valeur, &fenetre[i], 2);
+            // printf("  %d\n", valeur);
+            indice = (int) ((valeur + 32768) / tailleIntervalle);
+            histogramme[indice]++;
+        }
+        ecrireFenetre(ficDescripteur, histogramme, nbIntervalle);
+        for (int i = 0; i < nbIntervalle; ++i) {
+            histogramme[i] = 0;
+        }
+    }
+}
+
+/**
+ * problème effet de bord
+ * utiliser double ?
+ */
+void creerFenetresJeSaisPasComment(FILE* ficDescripteur, int nbEchantillon, int nbIntervalle, int* histogramme, FILE* descr) {
+
+}
+
 int indexer_fichier_audio(Fichier f, int nbEchantillon, int nbIntervalle, int id, char* chemin) {
     /* création du fichier et écriture de l'id */
     FILE* ficDescripteur = creation_descripteur(chemin, id);
@@ -99,17 +148,15 @@ int indexer_fichier_audio(Fichier f, int nbEchantillon, int nbIntervalle, int id
     afficherEnteteWav(f, &bytesPerSample, &nbOctet);
     bytesPerSample /= 8;
 
-    /**
-     * parcours de tout les échantillons
-     */
-    char* fenetre = malloc(bytesPerSample * nbEchantillon);
-    long valeur = 0;
-    while (fread(fenetre, bytesPerSample, nbEchantillon, f.fichier)) {
-        for (int i = 0; i < nbEchantillon; i += bytesPerSample) {
-            memcpy(&valeur, &fenetre[i], bytesPerSample);
-            printf("  %ld\n", valeur);
-        }
-    }
+    if (bytesPerSample == 1)
+        creerFenetresChar(ficDescripteur, nbEchantillon, nbIntervalle, histogramme, f.fichier);
+
+    if (bytesPerSample == 2)
+        creerFenetresShort(ficDescripteur, nbEchantillon, nbIntervalle, histogramme, f.fichier);
+
+    if (bytesPerSample == 3)
+        creerFenetresJeSaisPasComment(ficDescripteur, nbEchantillon, nbIntervalle, histogramme, f.fichier);
+
     fclose(ficDescripteur);
     return 1;
 }
