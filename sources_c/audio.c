@@ -3,6 +3,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+typedef struct s_block {
+    unsigned int id;
+    unsigned int nbOctet;
+    char* octets;
+} Block;
+
+int init_block(Block* b, Fichier f) {
+    if (fread(&(b->id), 4, 1, f.fichier) == 0) return 0;
+    if (fread(&(b->nbOctet), 4, 1, f.fichier) == 0) return 0;
+    b->octets = malloc(b->nbOctet);
+    if (fread(b->octets, b->nbOctet, 1, f.fichier) == 0) return 0;
+    return 1;
+}
+
+void free_block(Block *b) {
+    free(b->octets);
+}
+
 FILE* creation_descripteur(char* chemin, int id) {
     FILE* f = fopen(chemin, "w+");
     if (f == NULL) {
@@ -74,7 +92,9 @@ void afficherEnteteWav(Fichier f) {
     afficherConfig(f, "BytePerSample :", 2);
 }
 
-void lireBloc(Fichier f)
+void lireBloc(Fichier f) {
+
+}
 
 int indexer_fichier_audio(Fichier f, int nbEchantillon, int nbIntervalle, int id, char* chemin) {
     double valeur;
@@ -93,28 +113,13 @@ int indexer_fichier_audio(Fichier f, int nbEchantillon, int nbIntervalle, int id
         histogramme[i] = 0;
     }
     afficherEnteteWav(f);
-    while ((nbValeurLue = fread(&valeur, sizeof(double), 1, f.fichier)) == 1) {
-        // printf("  %e\n", swap(valeur));
-        // valeur = swap(valeur);
-        if (valeur + 1 < 0.0 || valeur + 1 > 2.0)
-            printf("valeur = %e.\n", valeur);
-        indice = (int) ((valeur + 1.0) / tailleIntervalle);
-        if (indice < 0 || indice > nbIntervalle)
-            printf("indice = %d\n", indice);
-        
-        histogramme[indice]++;
-        if (nb + 1 == nbEchantillon) {
-            ecrireFenetre(ficDescripteur, histogramme, nbIntervalle);
-            for (int i = 0; i < nbIntervalle; ++i) {
-                histogramme[i] = 0;
-            }
-            nb = 0;
+    Block b;
+    while (init_block(&b, f) != 0) {
+        /* problème de parcours de tableau ! nbOctet != bytePerSample*/
+        for (int i = 0; i < b.nbOctet; i++) {
+
         }
-        nb++;
-    }
-    /* écriture de la dernière fenêtre si incomplète */
-    if (nb - 1 != nbEchantillon) {
-        ecrireFenetre(ficDescripteur, histogramme, nbIntervalle);
+        free_block(&b);
     }
     fclose(ficDescripteur);
     return 1;
