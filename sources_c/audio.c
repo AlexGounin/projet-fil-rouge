@@ -88,16 +88,14 @@ void afficherEnteteWav(Fichier f, int* bitsPerSample, unsigned int* nbOctet) {
 
 
 void creerFenetresChar(FILE* ficDescripteur, int nbEchantillon, int nbIntervalle, int* histogramme, FILE* descr) {
-    char* fenetre = malloc(nbEchantillon);
-    short valeur = 0;
+    unsigned char* fenetre = malloc(nbEchantillon);
     double tailleIntervalle = ((double) 256) / ((double) nbIntervalle);
     int indice;
-    while (fread(fenetre, 2, nbEchantillon, descr)) {
+    while (fread(fenetre, 1, nbEchantillon, descr)) {
         /* construction de l'histogramme par parcours simple de la fenêtre */
         for (int i = 0; i < nbEchantillon; i += 1) {
-            memcpy(&valeur, &fenetre[i], 1);
             // printf("  %d\n", valeur);
-            indice = (int) ((valeur + 128) / tailleIntervalle);
+            indice = fenetre[i] / tailleIntervalle;
             histogramme[indice]++;
         }
         ecrireFenetre(ficDescripteur, histogramme, nbIntervalle);
