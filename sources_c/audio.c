@@ -2,24 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
-typedef struct s_block {
-    unsigned int id;
-    unsigned int nbOctet;
-    char* octets;
-} Block;
-
-int init_block(Block* b, Fichier f) {
-    if (fread(&(b->id), 4, 1, f.fichier) == 0) return 0;
-    if (fread(&(b->nbOctet), 4, 1, f.fichier) == 0) return 0;
-    b->octets = malloc(b->nbOctet);
-    if (fread(b->octets, b->nbOctet, 1, f.fichier) == 0) return 0;
-    return 1;
-}
-
-void free_block(Block *b) {
-    free(b->octets);
-}
+#include <string.h>
 
 FILE* creation_descripteur(char* chemin, int id) {
     FILE* f = fopen(chemin, "w+");
@@ -68,58 +51,64 @@ void afficherConfig(Fichier f, char* message, int nbOctet) {
     printf("%s %d\n", message, config);
 }
 
-void afficherEnteteWav(Fichier f) {
-    afficherConfigHexa(f, "FileTypeBlocID :", 4);
-    
-    afficherConfig(f, "FileSize :", 4);
-    
-    afficherConfigHexa(f, "FileFormatID :", 4);
-
-    afficherConfigHexa(f, "FormatBlocID :", 4);
-
-    afficherConfig(f, "BlocSize :", 4);
-
-    afficherConfig(f, "AudioFormat :", 2);
-
-    afficherConfig(f, "NbrCanaux :", 2);
-
-    afficherConfig(f, "Fréquence :", 4);
-
-    afficherConfig(f, "BytePerSecond :", 4);
-
-    afficherConfig(f, "BytePerBloc :", 2);
-
-    afficherConfig(f, "BytePerSample :", 2);
+void afficherBitsPerSample(Fichier f, char* message, int nbOctet, int* bitsPerSample) {
+    *bitsPerSample = 0;
+    fread(bitsPerSample, nbOctet, 1, f.fichier);
+    printf("%s %d\n", message, *bitsPerSample);
 }
 
-void lireBloc(Fichier f) {
+void afficherNbOctet(Fichier f, char* message, int nb, unsigned int* nbOctet) {
+    *nbOctet = 0;
+    fread(nbOctet, nb, 1, f.fichier);
+    printf("%s %d\n", message, *nbOctet);
+}
 
+void afficherEnteteWav(Fichier f, int* bitsPerSample, unsigned int* nbOctet) {
+    printf("\n[Bloc de déclaration d'un fichier au format wave]\n");
+    afficherConfigHexa(f, "\tFileTypeBlocID :", 4);
+    afficherConfig(f, "\tFileSize :", 4);
+    afficherConfigHexa(f, "\tFileFormatID :", 4);
+
+    printf("\n[Bloc décrivant le format audio]\n");
+    afficherConfigHexa(f, "\tFormatBlocID :", 4);
+    afficherConfig(f, "\tBlocSize :", 4);
+
+    printf("\n");
+    afficherConfig(f, "\tAudioFormat :", 2);
+    afficherConfig(f, "\tNbrCanaux :", 2);
+    afficherConfig(f, "\tFréquence :", 4);
+    afficherConfig(f, "\tBytePerSecond :", 4);
+    afficherConfig(f, "\tBytePerBloc :", 2);
+    afficherBitsPerSample(f, "\tBitsPerSample :", 2, bitsPerSample);
+
+    printf("\n[Bloc de donnée]\n");
+    afficherConfigHexa(f, "\tDataBlocID :", 4);
+    afficherNbOctet(f, "\tDataSize :", 4, nbOctet);
 }
 
 int indexer_fichier_audio(Fichier f, int nbEchantillon, int nbIntervalle, int id, char* chemin) {
-    double valeur;
-    int nbValeurLue;
-    
     /* création du fichier et écriture de l'id */
     FILE* ficDescripteur = creation_descripteur(chemin, id);
 
-    int nb = 0, indice;
     int* histogramme = (int*) malloc(sizeof(int) * nbIntervalle);
-    double tailleIntervalle = 2.0 / (double) nbIntervalle;
-    /**
-     * parcours complet du fichier
-     */
     for (int i = 0; i < nbIntervalle; ++i) {
         histogramme[i] = 0;
     }
-    afficherEnteteWav(f);
-    Block b;
-    while (init_block(&b, f) != 0) {
-        /* problème de parcours de tableau ! nbOctet != bytePerSample*/
-        for (int i = 0; i < b.nbOctet; i++) {
+    int bytesPerSample;
+    unsigned int nbOctet;
+    afficherEnteteWav(f, &bytesPerSample, &nbOctet);
+    bytesPerSample /= 8;
 
+    /**
+     * parcours de tout les échantillons
+     */
+    char* fenetre = malloc(bytesPerSample * nbEchantillon);
+    long valeur = 0;
+    while (fread(fenetre, bytesPerSample, nbEchantillon, f.fichier)) {
+        for (int i = 0; i < nbEchantillon; i += bytesPerSample) {
+            memcpy(&valeur, &fenetre[i], bytesPerSample);
+            printf("  %ld\n", valeur);
         }
-        free_block(&b);
     }
     fclose(ficDescripteur);
     return 1;
