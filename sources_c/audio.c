@@ -38,6 +38,44 @@ double swap(double d) {
     return a;
 }
 
+void afficherConfigHexa(Fichier f, char* message, int nbOctet) {
+    unsigned int config;
+    fread(&config, nbOctet, 1, f.fichier);
+    printf("%s 0x%x\n", message, config);
+}
+
+void afficherConfig(Fichier f, char* message, int nbOctet) {
+    unsigned int config;
+    fread(&config, nbOctet, 1, f.fichier);
+    printf("%s %d\n", message, config);
+}
+
+void afficherEnteteWav(Fichier f) {
+    afficherConfigHexa(f, "FileTypeBlocID :", 4);
+    
+    afficherConfig(f, "FileSize :", 4);
+    
+    afficherConfigHexa(f, "FileFormatID :", 4);
+
+    afficherConfigHexa(f, "FormatBlocID :", 4);
+
+    afficherConfig(f, "BlocSize :", 4);
+
+    afficherConfig(f, "AudioFormat :", 2);
+
+    afficherConfig(f, "NbrCanaux :", 2);
+
+    afficherConfig(f, "Fréquence :", 4);
+
+    afficherConfig(f, "BytePerSecond :", 4);
+
+    afficherConfig(f, "BytePerBloc :", 2);
+
+    afficherConfig(f, "BytePerSample :", 2);
+}
+
+void lireBloc(Fichier f)
+
 int indexer_fichier_audio(Fichier f, int nbEchantillon, int nbIntervalle, int id, char* chemin) {
     double valeur;
     int nbValeurLue;
@@ -54,9 +92,10 @@ int indexer_fichier_audio(Fichier f, int nbEchantillon, int nbIntervalle, int id
     for (int i = 0; i < nbIntervalle; ++i) {
         histogramme[i] = 0;
     }
+    afficherEnteteWav(f);
     while ((nbValeurLue = fread(&valeur, sizeof(double), 1, f.fichier)) == 1) {
         // printf("  %e\n", swap(valeur));
-        valeur = swap(valeur);
+        // valeur = swap(valeur);
         if (valeur + 1 < 0.0 || valeur + 1 > 2.0)
             printf("valeur = %e.\n", valeur);
         indice = (int) ((valeur + 1.0) / tailleIntervalle);
