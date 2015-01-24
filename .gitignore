@@ -3,3 +3,4 @@
 !*.sh
 *.sublime-workspace
 *.o
+/sources_java/bin
